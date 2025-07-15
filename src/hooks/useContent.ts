@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ContentItem } from '../pages/types';
 import { octokit } from '../../api/github'; // This should be a backend-only module
-import { REPO_OWNER, REPO_NAME, BRANCH } from '../env'; // No GITHUB_TOKEN here
+import { REPO_OWNER, REPO_NAME, BRANCH, CONTENT_PATH } from '../env'; // No GITHUB_TOKEN here
 import matter from 'gray-matter';
 
 const isGitHubEnabled = true;
@@ -12,7 +12,7 @@ const getContentFiles = async (folder: 'posts' | 'pages') => {
     const { data } = await octokit.rest.repos.getContent({
       owner: REPO_OWNER,
       repo: REPO_NAME,
-      path: `content/${folder}`,
+      path: `${CONTENT_PATH}/${folder}`,
       ref: BRANCH,
     });
 
@@ -424,7 +424,7 @@ export function useContent() {
       const markdownContent = createMarkdownContent(contentItem);
       const folder = contentItem.type === 'post' ? 'posts' : 'pages';
       const filename = contentItem.filename || `${contentItem.id}.md`;
-      const path = `content/${folder}/${filename}`;
+      const path = `${CONTENT_PATH}/${folder}/${filename}`;
 
       let success = false;
       
@@ -471,7 +471,7 @@ export function useContent() {
 
     try {
       const folder = contentItem.type === 'post' ? 'posts' : 'pages';
-      const path = `content/${folder}/${contentItem.filename}`;
+      const path = `${CONTENT_PATH}/${folder}/${contentItem.filename}`;
       
       const success = await deleteFile(
         path,

@@ -9,3 +9,4 @@ if (!process.env.GITHUB_TOKEN) {
 }
 
 export const isGitHubEnabled = Boolean(process.env.GITHUB_TOKEN);
+export const CONTENT_PATH = process.env.CONTENT_PATH || "content";

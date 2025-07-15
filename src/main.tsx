@@ -15,7 +15,6 @@ const hasValidAuth0Config = (): boolean => {
     )
   } catch (error) {
     console.warn('Error checking Auth0 configuration:', error)
-    console.log('Raw env:', import.meta.env)
     return false
   }
 }
@@ -53,7 +52,6 @@ function AuthenticatedApp() {
     )
   } catch (error) {
     console.error('Error initializing Auth0Provider:', error)
-    console.log('Raw env:', import.meta.env)
     return <DemoApp />
   }
 }
@@ -63,7 +61,6 @@ const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('Root element not found')
 
 console.log('Auth config:', authConfig)
-console.log('Env raw:', import.meta.env)
 
 ReactDOM.createRoot(rootElement).render(
   hasValidAuth0Config() ? <AuthenticatedApp /> : <DemoApp />
