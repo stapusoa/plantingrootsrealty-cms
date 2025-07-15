@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ContentItem } from '../pages/types';
-import { octokit } from '../../api/github'; // backend-only, token secure here
+import { octokit } from '../../api/github'; // backend-only token, secure
 import { REPO_OWNER, REPO_NAME, BRANCH, CONTENT_PATH } from '../env';
 import matter from 'gray-matter';
 
@@ -66,7 +66,7 @@ const parseMarkdownFile = (rawContent: string, filename: string) => {
       createdAt: data.date || new Date().toISOString().split('T')[0],
       updatedAt: data.updated || data.date || new Date().toISOString().split('T')[0],
       filename,
-      sha: '', // will be set later
+      sha: '', // to be set after fetch
     };
   } catch (error) {
     console.error('Error parsing markdown file:', error);
@@ -141,7 +141,7 @@ const deleteFile = async (
   }
 };
 
-// Upload media via backend API (no token on frontend!)
+// Media upload calls your backend API; no token exposure on frontend!
 const uploadMediaFile = async (file: File): Promise<{ success: boolean; url?: string; message?: string }> => {
   try {
     const formData = new FormData();

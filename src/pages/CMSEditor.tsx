@@ -128,9 +128,11 @@ export function CMSEditor() {
     }
   };
 
-  const handleCreate = () => {
+   const handleCreate = () => {
+    console.log('Create button clicked');
     const type = activeSection === 'pages' ? 'page' : 'post';
     const newContent = createContent(type);
+    console.log('New content created:', newContent);
     setSelectedContent(newContent);
     setIsEditing(true);
     setViewMode('preview');
@@ -286,7 +288,7 @@ export function CMSEditor() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen bg-background" key={activeSection}>
         {!isGitHubConnected && (
           <div className="fixed top-0 left-0 right-0 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200 dark:border-blue-800 px-4 py-2 text-center z-40">
             <span className="text-sm text-blue-800 dark:text-blue-200">
