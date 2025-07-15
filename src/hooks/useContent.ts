@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import type { ContentItem } from '../pages/types';
-import { octokit } from '../../api/github';
-import { GITHUB_TOKEN, REPO_OWNER, REPO_NAME, BRANCH } from '../env';
+import { octokit } from '../../api/github'; // This should be a backend-only module
+import { REPO_OWNER, REPO_NAME, BRANCH } from '../env'; // No GITHUB_TOKEN here
 import matter from 'gray-matter';
 
-
-// Check if GitHub is enabled
-const isGitHubEnabled = Boolean(GITHUB_TOKEN && REPO_OWNER && REPO_NAME);
+const isGitHubEnabled = true;
 
 // GitHub API functions
 const getContentFiles = async (folder: 'posts' | 'pages') => {
