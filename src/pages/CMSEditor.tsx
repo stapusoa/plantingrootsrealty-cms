@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  FileText, 
-  Image, 
-  Settings, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  FileText,
+  Image,
+  Settings,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
   Menu,
   Search,
   Grid,
@@ -36,27 +36,27 @@ export function CMSEditor() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'preview'>('preview');
   const [saving, setSaving] = useState(false);
-  
-  const { 
-    contents, 
-    loading, 
-    error, 
-    loadContent, 
-    saveContent, 
-    deleteContent, 
+
+  const {
+    contents,
+    loading,
+    error,
+    loadContent,
+    saveContent,
+    deleteContent,
     createContent,
-    isGitHubConnected 
+    isGitHubConnected
   } = useContent();
 
-  const filteredContents = contents.filter(content => 
+  const filteredContents = contents.filter(content =>
     content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     content.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentSectionContents = filteredContents.filter(content => 
-    activeSection === 'posts' ? content.type === 'post' : 
-    activeSection === 'pages' ? content.type === 'page' : 
-    false
+  const currentSectionContents = filteredContents.filter(content =>
+    activeSection === 'posts' ? content.type === 'post' :
+      activeSection === 'pages' ? content.type === 'page' :
+        false
   );
 
   // Auto-select first content when switching sections
@@ -78,12 +78,12 @@ export function CMSEditor() {
 
     setSaving(true);
     try {
-      const updated = { 
-        ...selectedContent, 
-        ...updatedContent, 
-        updatedAt: new Date().toISOString().split('T')[0] 
+      const updated = {
+        ...selectedContent,
+        ...updatedContent,
+        updatedAt: new Date().toISOString().split('T')[0]
       };
-      
+
       const success = await saveContent(updated);
       if (success) {
         setSelectedContent(updated);
@@ -134,7 +134,7 @@ export function CMSEditor() {
   const renderMainContent = () => {
     if (loading) {
       return (
-        <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin" />
           <h2>Loading content...</h2>
           <p className="text-muted-foreground">
@@ -146,7 +146,7 @@ export function CMSEditor() {
 
     if (error) {
       return (
-        <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
           <Alert className="max-w-md">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -163,7 +163,7 @@ export function CMSEditor() {
 
     if (activeSection === 'media') {
       return (
-        <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
           <Image className="h-16 w-16 text-muted-foreground" />
           <h2>Media Management</h2>
           <p className="text-muted-foreground max-w-md">
@@ -179,13 +179,13 @@ export function CMSEditor() {
 
     if (activeSection === 'settings') {
       return (
-        <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
           <Settings className="h-16 w-16 text-muted-foreground" />
           <h2>CMS Settings</h2>
           <p className="text-muted-foreground max-w-md">
             Configure your CMS settings, user permissions, and site preferences.
           </p>
-          <div className="space-y-4 max-w-md">
+          <div className="flex flex-col h-full gap-4 max-w-md">
             <div className="flex items-center gap-2 p-3 border rounded-lg">
               {isGitHubConnected ? (
                 <>
@@ -228,8 +228,8 @@ export function CMSEditor() {
 
     if (selectedContent) {
       return (
-        <ContentEditor 
-          content={selectedContent} 
+        <ContentEditor
+          content={selectedContent}
           isEditing={isEditing}
           onSave={handleSave}
           saving={saving}
@@ -238,11 +238,11 @@ export function CMSEditor() {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+      <div className="flex flex-col items-center justify-center h-full text-center gap-4">
         <FileText className="h-16 w-16 text-muted-foreground" />
         <h2>No content selected</h2>
         <p className="text-muted-foreground max-w-md">
-          {currentSectionContents.length > 0 
+          {currentSectionContents.length > 0
             ? 'Select a content item from the sidebar to view or edit it'
             : `Create your first ${activeSection.slice(0, -1)} to get started`
           }
@@ -254,7 +254,10 @@ export function CMSEditor() {
               View All
             </Button>
           )}
-          <Button onClick={handleCreate}>
+          <Button onClick={() => {
+            handleCreate();
+            setViewMode('preview');
+          }}>
             <Plus className="mr-2 h-4 w-4" />
             Create New
           </Button>
@@ -274,11 +277,11 @@ export function CMSEditor() {
             </span>
           </div>
         )}
-        
+
         <div className="flex flex-1 min-h-0">
           <Sidebar className="w-64 border-r">
             <SidebarContent className="p-4">
-              <div className="space-y-6">
+              <div className="flex flex-col h-full gap-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h2>CMS Editor</h2>
@@ -298,7 +301,7 @@ export function CMSEditor() {
                       </Button>
                     </div>
                   </div>
-                  <nav className="space-y-2">
+                  <nav className="flex flex-col h-full gap-2">
                     <Button
                       variant={activeSection === 'posts' ? 'default' : 'ghost'}
                       className="w-full justify-start"
@@ -350,7 +353,7 @@ export function CMSEditor() {
                 )}
 
                 {(activeSection === 'posts' || activeSection === 'pages') && !loading && (
-                  <div className="space-y-4">
+                  <div className="flex flex-col h-full gap-4">
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -364,18 +367,20 @@ export function CMSEditor() {
                       <Button size="sm" onClick={() => setViewMode('list')} variant="outline">
                         <Grid className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" onClick={handleCreate}>
+                      <Button size="sm" onClick={() => {
+                        handleCreate();
+                        setViewMode('preview');
+                      }}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
 
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <div className="flex flex-col h-full gap-2 max-h-96">
                       {currentSectionContents.map(content => (
-                        <Card 
-                          key={content.id} 
-                          className={`cursor-pointer transition-colors ${
-                            selectedContent?.id === content.id ? 'ring-2 ring-primary' : ''
-                          }`}
+                        <Card
+                          key={content.id}
+                          className={`cursor-pointer transition-colors ${selectedContent?.id === content.id ? 'ring-2 ring-primary' : ''
+                            }`}
                           onClick={() => handleSelectContent(content)}
                         >
                           <CardContent className="p-3">
@@ -394,7 +399,7 @@ export function CMSEditor() {
                           </CardContent>
                         </Card>
                       ))}
-                      
+
                       {currentSectionContents.length === 0 && (
                         <div className="text-center py-8 text-muted-foreground">
                           {searchTerm ? 'No content matches your search.' : `No ${activeSection} found.`}

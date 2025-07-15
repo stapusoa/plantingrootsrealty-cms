@@ -8,11 +8,14 @@ const isGitHubEnabled = true;
 
 // GitHub API functions
 const getContentFiles = async (folder: 'posts' | 'pages') => {
+  const fullPath = `${CONTENT_PATH}/${folder}`;
+  console.log("Fetching content from path:", fullPath); // Added line
+
   try {
     const { data } = await octokit.rest.repos.getContent({
       owner: REPO_OWNER,
       repo: REPO_NAME,
-      path: `${CONTENT_PATH}/${folder}`,
+      path: fullPath,
       ref: BRANCH,
     });
 
