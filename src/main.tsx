@@ -1,4 +1,3 @@
-import { GITHUB_TOKEN } from './env';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { Auth0Provider } from '@auth0/auth0-react';
@@ -9,16 +8,17 @@ import './styles/globals.css';
 const hasValidAuth0Config = (): boolean => {
   try {
     return Boolean(
-      authConfig.domain && 
+      authConfig.domain &&
       authConfig.domain !== 'your-auth0-domain.auth0.com' &&
-      authConfig.clientId && 
+      authConfig.clientId &&
       authConfig.clientId !== 'your-client-id'
-    );
+    )
   } catch (error) {
-    console.warn('Error checking Auth0 configuration:', error);
-    return false;
+    console.warn('Error checking Auth0 configuration:', error)
+    console.log('Raw env:', import.meta.env)
+    return false
   }
-};
+}
 
 // Demo mode component for when Auth0 is not configured
 function DemoApp() {
@@ -50,23 +50,21 @@ function AuthenticatedApp() {
       >
         <App />
       </Auth0Provider>
-    );
+    )
   } catch (error) {
-    console.error('Error initializing Auth0Provider:', error);
-    return <DemoApp />;
+    console.error('Error initializing Auth0Provider:', error)
+    console.log('Raw env:', import.meta.env)
+    return <DemoApp />
   }
 }
 
 // Get the root element safely
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error('Root element not found');
-}
+const rootElement = document.getElementById('root')
+if (!rootElement) throw new Error('Root element not found')
 
-console.log('Auth config:', authConfig);
-console.log('GitHub token:', GITHUB_TOKEN ? '✅ exists' : '❌ missing');
+console.log('Auth config:', authConfig)
+console.log('Env raw:', import.meta.env)
 
-// Render the appropriate app based on configuration
 ReactDOM.createRoot(rootElement).render(
   hasValidAuth0Config() ? <AuthenticatedApp /> : <DemoApp />
-);
+)
