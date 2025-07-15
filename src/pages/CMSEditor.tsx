@@ -1,41 +1,37 @@
-import { useState, useEffect } from 'react';
-import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import React, { useState, useEffect } from 'react';
+import { Sidebar, SidebarContent, SidebarProvider } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileText,
-  Image,
   Settings,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Menu,
-  Search,
-  Grid,
-  List,
   Loader2,
   RefreshCw,
   AlertCircle,
   Github,
   Wifi,
-  WifiOff
+  WifiOff,
+  Plus
 } from 'lucide-react';
 import type { ContentItem } from './types';
 import { ContentEditor } from './ContentEditor';
 import { Dashboard } from './Dashboard';
+import { MediaUpload } from '@/components/MediaUpload';
+import { CMSSidebar } from '@/components/CMSSidebar';
+import { CMSHeader } from '@/components/CMSHeader';
 import { useContent } from '../hooks/useContent';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { SectionType } from '@/components/CMSSidebar';
+
+const SITE_URL = 'https://plantingrootsrealty.com';
 
 export function CMSEditor() {
-  const [activeSection, setActiveSection] = useState('posts');
+  const [activeSection, setActiveSection] = useState<SectionType>('posts');
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'preview'>('preview');
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   const {
     contents,
@@ -45,6 +41,7 @@ export function CMSEditor() {
     saveContent,
     deleteContent,
     createContent,
+    uploadMediaFile,
     isGitHubConnected
   } = useContent();
 
@@ -59,10 +56,9 @@ export function CMSEditor() {
         false
   );
 
-  // Auto-select first content when switching sections
   useEffect(() => {
-    if ((activeSection === 'posts' || activeSection === 'pages') && currentSectionContents.length > 0) {
-      if (!selectedContent || !currentSectionContents.find(c => c.id === selectedContent.id)) {
+    if ((activeSection === 'posts' || activeSection === 'pages') && currentSectionContents.length) {
+      if (!selectedContent || !currentSectionContents.some(c => c.id === selectedContent.id)) {
         setSelectedContent(currentSectionContents[0]);
         setIsEditing(false);
         setViewMode('preview');
@@ -71,19 +67,17 @@ export function CMSEditor() {
       setSelectedContent(null);
       setIsEditing(false);
     }
-  }, [activeSection, currentSectionContents]);
+  }, [activeSection, currentSectionContents, selectedContent]);
 
   const handleSave = async (updatedContent: Partial<ContentItem>) => {
     if (!selectedContent) return;
-
     setSaving(true);
     try {
-      const updated = {
+      const updated: ContentItem = {
         ...selectedContent,
         ...updatedContent,
-        updatedAt: new Date().toISOString().split('T')[0]
+        updatedAt: new Date().toISOString().split('T')[0],
       };
-
       const success = await saveContent(updated);
       if (success) {
         setSelectedContent(updated);
@@ -91,30 +85,52 @@ export function CMSEditor() {
       } else {
         console.error('Failed to save content');
       }
-    } catch (err) {
-      console.error('Error saving content:', err);
+    } catch (e) {
+      console.error('Error saving content:', e);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const contentToDelete = contents.find(c => c.id === id);
-    if (!contentToDelete) return;
+  const handlePublish = async () => {
+    if (!selectedContent) return;
+    setPublishing(true);
+    try {
+      const updatedContent: ContentItem = {
+        ...selectedContent,
+        status: 'published',
+        updatedAt: new Date().toISOString().split('T')[0],
+      };
+      const success = await saveContent(updatedContent);
+      if (success) {
+        setSelectedContent(updatedContent);
+      } else {
+        console.error('Failed to publish content');
+      }
+    } catch (e) {
+      console.error('Error publishing content:', e);
+    } finally {
+      setPublishing(false);
+    }
+  };
 
+  const handleDelete = async (id?: string) => {
+    const contentToDelete = id ? contents.find(c => c.id === id) : selectedContent;
+    if (!contentToDelete) return;
     try {
       const success = await deleteContent(contentToDelete);
-      if (success && selectedContent?.id === id) {
-        const remaining = currentSectionContents.filter(c => c.id !== id);
-        setSelectedContent(remaining.length > 0 ? remaining[0] : null);
+      if (success && selectedContent?.id === contentToDelete.id) {
+        const remaining = currentSectionContents.filter(c => c.id !== contentToDelete.id);
+        setSelectedContent(remaining.length ? remaining[0] : null);
       }
-    } catch (err) {
-      console.error('Error deleting content:', err);
+    } catch (e) {
+      console.error('Error deleting content:', e);
     }
   };
 
   const handleCreate = () => {
-    const newContent = createContent(activeSection === 'pages' ? 'page' : 'post');
+    const type = activeSection === 'pages' ? 'page' : 'post';
+    const newContent = createContent(type);
     setSelectedContent(newContent);
     setIsEditing(true);
     setViewMode('preview');
@@ -123,6 +139,7 @@ export function CMSEditor() {
   const handleSelectContent = (content: ContentItem) => {
     setSelectedContent(content);
     setViewMode('preview');
+    setIsEditing(false);
   };
 
   const handleEditContent = (content: ContentItem) => {
@@ -132,80 +149,79 @@ export function CMSEditor() {
   };
 
   const renderMainContent = () => {
-    if (loading) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <h2>Loading content...</h2>
-          <p className="text-muted-foreground">
-            {isGitHubConnected ? 'Fetching content from GitHub repository' : 'Loading sample content'}
-          </p>
-        </div>
-      );
-    }
+    if (loading) return (
+      <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <h2>Loading content...</h2>
+        <p className="text-muted-foreground">
+          {isGitHubConnected ? 'Fetching content from GitHub repository' : 'Loading sample content'}
+        </p>
+      </div>
+    );
 
-    if (error) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-          <Alert className="max-w-md">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error}
-            </AlertDescription>
-          </Alert>
-          <Button onClick={loadContent} variant="outline">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Retry
-          </Button>
-        </div>
-      );
-    }
+    if (error) return (
+      <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+        <Alert className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button onClick={loadContent} variant="outline" className="mx-auto flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Retry
+        </Button>
+      </div>
+    );
 
-    if (activeSection === 'media') {
-      return (
-        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-          <Image className="h-16 w-16 text-muted-foreground" />
-          <h2>Media Management</h2>
-          <p className="text-muted-foreground max-w-md">
-            Upload and manage your images, videos, and other media files. This feature will be available soon.
-          </p>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Upload Media
-          </Button>
-        </div>
-      );
-    }
+    if (activeSection === 'media') return <MediaUpload uploadMediaFile={uploadMediaFile} />;
 
     if (activeSection === 'settings') {
       return (
-        <div className="flex flex-col items-center justify-center h-full text-center gap-4">
+        <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
           <Settings className="h-16 w-16 text-muted-foreground" />
-          <h2>CMS Settings</h2>
-          <p className="text-muted-foreground max-w-md">
-            Configure your CMS settings, user permissions, and site preferences.
-          </p>
-          <div className="flex flex-col h-full gap-4 max-w-md">
-            <div className="flex items-center gap-2 p-3 border rounded-lg">
+          <div className="space-y-4">
+            <h2>CMS Settings</h2>
+            <p className="text-muted-foreground max-w-md">
+              Configure your CMS settings, GitHub integration, and site preferences.
+            </p>
+          </div>
+          <div className="space-y-4 max-w-md w-full">
+            <div className="flex items-center gap-3 p-4 border rounded-lg">
               {isGitHubConnected ? (
                 <>
-                  <Github className="h-4 w-4 text-green-600" />
-                  <Wifi className="h-4 w-4 text-green-600" />
-                  <span className="text-sm">GitHub Connected</span>
+                  <Github className="h-5 w-5 text-green-600" />
+                  <Wifi className="h-5 w-5 text-green-600" />
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">GitHub Connected</div>
+                    <div className="text-sm text-muted-foreground">Repository integration active</div>
+                  </div>
                 </>
               ) : (
                 <>
-                  <Github className="h-4 w-4 text-muted-foreground" />
-                  <WifiOff className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">GitHub Not Connected</span>
+                  <Github className="h-5 w-5 text-muted-foreground" />
+                  <WifiOff className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1 text-left">
+                    <div className="font-medium text-muted-foreground">GitHub Not Connected</div>
+                    <div className="text-sm text-muted-foreground">Running in demo mode</div>
+                  </div>
                 </>
               )}
             </div>
             {!isGitHubConnected && (
-              <p className="text-xs text-muted-foreground">
-                Add VITE_GITHUB_TOKEN to your environment variables to enable GitHub integration.
-              </p>
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  Add VITE_GITHUB_TOKEN to your environment variables to enable GitHub integration and persistent storage.
+                </AlertDescription>
+              </Alert>
             )}
+            <div className="p-4 border rounded-lg">
+              <div className="font-medium mb-2">Site Configuration</div>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div>Site URL: {SITE_URL}</div>
+                <div>Content Format: Markdown</div>
+                <div>Storage: {isGitHubConnected ? 'GitHub Repository' : 'Local Demo'}</div>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -233,33 +249,35 @@ export function CMSEditor() {
           isEditing={isEditing}
           onSave={handleSave}
           saving={saving}
+          siteUrl={SITE_URL}
+          uploadMediaFile={uploadMediaFile}
+          isGitHubConnected={isGitHubConnected}
         />
       );
     }
 
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center gap-4">
+      <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
         <FileText className="h-16 w-16 text-muted-foreground" />
-        <h2>No content selected</h2>
-        <p className="text-muted-foreground max-w-md">
-          {currentSectionContents.length > 0
-            ? 'Select a content item from the sidebar to view or edit it'
-            : `Create your first ${activeSection.slice(0, -1)} to get started`
-          }
-        </p>
-        <div className="flex items-center gap-2">
+        <div className="space-y-4">
+          <h2>No content selected</h2>
+          <p className="text-muted-foreground max-w-md">
+            {currentSectionContents.length > 0
+              ? 'Select a content item from the sidebar to view or edit it'
+              : `Create your first ${activeSection.slice(0, -1)} to get started`
+            }
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
           {currentSectionContents.length > 0 && (
             <Button variant="outline" onClick={() => setViewMode('list')}>
-              <Grid className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               View All
             </Button>
           )}
-          <Button onClick={() => {
-            handleCreate();
-            setViewMode('preview');
-          }}>
+          <Button onClick={handleCreate} size="lg">
             <Plus className="mr-2 h-4 w-4" />
-            Create New
+            Create {activeSection === 'pages' ? 'Page' : 'Post'}
           </Button>
         </div>
       </div>
@@ -268,189 +286,50 @@ export function CMSEditor() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background flex-col">
-        {/* Status banner for demo mode */}
+      <div className="flex h-screen bg-background">
         {!isGitHubConnected && (
-          <div className="bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200 dark:border-blue-800 p-2 text-center text-sm">
-            <span className="text-blue-800 dark:text-blue-200">
+          <div className="fixed top-0 left-0 right-0 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200 dark:border-blue-800 px-4 py-2 text-center z-40">
+            <span className="text-sm text-blue-800 dark:text-blue-200">
               🚀 Demo Mode - Content is stored locally. Add VITE_GITHUB_TOKEN environment variable to enable GitHub integration.
             </span>
           </div>
         )}
 
-        <div className="flex flex-1 min-h-0">
-          <Sidebar className="w-64 border-r">
+        <div className={`flex w-full ${!isGitHubConnected ? 'pt-10' : ''}`}>
+          <Sidebar className="w-72 border-r flex-shrink-0">
             <SidebarContent className="p-4">
-              <div className="flex flex-col h-full gap-6">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2>CMS Editor</h2>
-                    <div className="flex items-center gap-2">
-                      {isGitHubConnected ? (
-                        <Github className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Github className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={loadContent}
-                        disabled={loading}
-                      >
-                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                      </Button>
-                    </div>
-                  </div>
-                  <nav className="flex flex-col h-full gap-2">
-                    <Button
-                      variant={activeSection === 'posts' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => setActiveSection('posts')}
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      Posts
-                      <Badge variant="secondary" className="ml-auto">
-                        {contents.filter(c => c.type === 'post').length}
-                      </Badge>
-                    </Button>
-                    <Button
-                      variant={activeSection === 'pages' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => setActiveSection('pages')}
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      Pages
-                      <Badge variant="secondary" className="ml-auto">
-                        {contents.filter(c => c.type === 'page').length}
-                      </Badge>
-                    </Button>
-                    <Button
-                      variant={activeSection === 'media' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => setActiveSection('media')}
-                    >
-                      <Image className="mr-2 h-4 w-4" />
-                      Media
-                    </Button>
-                    <Button
-                      variant={activeSection === 'settings' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => setActiveSection('settings')}
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Button>
-                  </nav>
-                </div>
-
-                {!isGitHubConnected && (
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Demo mode - Add VITE_GITHUB_TOKEN for GitHub integration
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {(activeSection === 'posts' || activeSection === 'pages') && !loading && (
-                  <div className="flex flex-col h-full gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          placeholder="Search content..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-9"
-                        />
-                      </div>
-                      <Button size="sm" onClick={() => setViewMode('list')} variant="outline">
-                        <Grid className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" onClick={() => {
-                        handleCreate();
-                        setViewMode('preview');
-                      }}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="flex flex-col h-full gap-2 max-h-96">
-                      {currentSectionContents.map(content => (
-                        <Card
-                          key={content.id}
-                          className={`cursor-pointer transition-colors ${selectedContent?.id === content.id ? 'ring-2 ring-primary' : ''
-                            }`}
-                          onClick={() => handleSelectContent(content)}
-                        >
-                          <CardContent className="p-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="truncate">{content.title}</h4>
-                                <p className="text-sm text-muted-foreground truncate">{content.excerpt}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <Badge variant={content.status === 'published' ? 'default' : 'secondary'}>
-                                    {content.status}
-                                  </Badge>
-                                  <span className="text-xs text-muted-foreground">{content.updatedAt}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-
-                      {currentSectionContents.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                          {searchTerm ? 'No content matches your search.' : `No ${activeSection} found.`}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <CMSSidebar
+                activeSection={activeSection}
+                setActiveSection={setActiveSection}
+                contents={contents}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                selectedContent={selectedContent}
+                loading={loading}
+                isGitHubConnected={isGitHubConnected}
+                onSelectContent={handleSelectContent}
+                onCreateContent={handleCreate}
+                onSetViewMode={setViewMode}
+                onRefresh={loadContent}
+                siteUrl={SITE_URL}
+              />
             </SidebarContent>
           </Sidebar>
 
           <div className="flex-1 flex flex-col min-w-0">
-            <header className="border-b p-4 flex items-center gap-4 flex-shrink-0">
-              <SidebarTrigger className="md:hidden">
-                <Menu className="h-4 w-4" />
-              </SidebarTrigger>
-              <h1 className="flex-1 truncate">Content Management System</h1>
-              {selectedContent && (
-                <div className="flex items-center gap-2">
-                  {viewMode === 'preview' && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewMode('list')}
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditing(!isEditing)}
-                      >
-                        {isEditing ? <Eye className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                        {isEditing ? 'Preview' : 'Edit'}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(selectedContent.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              )}
-            </header>
+            <CMSHeader
+              selectedContent={selectedContent}
+              viewMode={viewMode}
+              isEditing={isEditing}
+              publishing={publishing}
+              isGitHubConnected={isGitHubConnected}
+              onSetViewMode={() => setViewMode('list')}
+              onToggleEdit={() => setIsEditing(!isEditing)}
+              onPublish={handlePublish}
+              onDelete={() => selectedContent && handleDelete(selectedContent.id)}
+            />
 
-            <main className="flex-1 p-6 overflow-auto min-h-0">
+            <main className="flex-1 p-4 overflow-auto">
               {renderMainContent()}
             </main>
           </div>
