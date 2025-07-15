@@ -1,114 +1,122 @@
-# React + TypeScript + Vite
+# CMS Repository
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-## Git Setup Tips
-
-### Save SSH Key Passphrase
-
-If you use an SSH key with a passphrase and don't want to enter it every time, you can use the SSH agent:
-
-```bash
-# Start the SSH agent in the background
-eval "$(ssh-agent -s)"
-
-# Add your key to the agent (update path if needed)
-ssh-add ~/.ssh/id_ed25519
-```
-
-To automatically do this when opening a terminal, add those lines to your shell profile (e.g., `~/.zshrc` or `~/.bashrc`).
+This repository contains the CMS application, now separated from the main `plantingrootsrealty` monorepo. It uses `pnpm` as the package manager.
 
 ---
 
-### Push Changes to CMS Repo
+## Setup & Development
 
-If you're working within a monorepo and your CMS app is located in `apps/cms`, and you've already added a Git remote for it, you can push changes like this:
+### Install dependencies
 
 ```bash
-# Navigate to the CMS app
-cd apps/cms
-
-# Add, commit, and push changes
-git add .
-git commit -m "Describe your changes"
-git push origin main  # or whichever branch you're using
+pnpm install
 ```
 
-If you haven't added the remote yet, you can do so with:
+### Run development server
+
+```bash
+pnpm dev
+```
+
+Open your browser to [http://localhost:3000](http://localhost:3000) (or the port shown in the console) to view the app.
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the root of the CMS repo with the following:
+
+```env
+VITE_GITHUB_TOKEN=your_github_personal_access_token
+VITE_AUTH0_DOMAIN=your-auth0-domain.auth0.com
+VITE_AUTH0_CLIENT_ID=your-auth0-client-id
+VITE_AUTH0_AUDIENCE=your-auth0-api-audience # optional
+VITE_APP_ORIGIN=http://localhost:3000       # or your production URL
+VITE_API_ORIGIN=http://localhost:3000/api   # or your production API URL
+```
+
+Replace the placeholders with your actual credentials and URLs.
+
+---
+
+## Git & Deployment
+
+### Save SSH Key Passphrase (Optional)
+
+If your SSH key has a passphrase and you want to avoid entering it every time:
+
+```bash
+# Start SSH agent
+eval "$(ssh-agent -s)"
+
+# Add your SSH key (update the path if necessary)
+ssh-add ~/.ssh/id_ed25519
+```
+
+Add these lines to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.) to automate this on terminal start.
+
+---
+
+### Push Changes to CMS Repository
+
+```bash
+git add .
+git commit -m "Your commit message"
+git push origin main
+```
+
+Verify your remote:
+
+```bash
+git remote -v
+```
+
+If the remote is missing or incorrect, add it with:
 
 ```bash
 git remote add origin git@github.com:your-username/your-cms-repo.git
 ```
 
-Replace `your-username/your-cms-repo` with your actual GitHub repo path.
+Replace `your-username/your-cms-repo` with your actual GitHub path.
+
+---
+
+## Build & Preview
+
+### Build production-ready files
 
 ```bash
-cd plantingrootsrealty
-git subtree push --prefix=apps/cms cms main 
+pnpm build
 ```
+
+### Preview the production build locally
+
+```bash
+pnpm preview
+```
+
+The `build` command outputs the production assets to the `dist/` folder.
+
+---
+
+## Deployment Notes
+
+- When deploying (e.g., on Vercel, Netlify), set the **project root** to this CMS repo folder, **not** the old monorepo root.
+
+- Set environment variables in your deployment platform’s dashboard matching the `.env` keys.
+
+- Serve the `dist/` folder contents in production.
+
+---
+
+## Additional Tips
+
+- Keep `.env` files out of Git to protect secrets.
+
+- Use `.gitignore` to exclude `node_modules/`, `.env`, and other local files.
+
+- For more help, refer to official docs or ask.
+
+---
+
+Happy coding! 🚀
