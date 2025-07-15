@@ -407,7 +407,7 @@ export function ContentEditor({
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-6xl">
       <article className="space-y-8">
         <header className="pb-8 border-b space-y-4">
           <div className="flex items-center gap-3">

@@ -36,11 +36,11 @@ export function CMSHeader({
   onDelete
 }: CMSHeaderProps) {
   return (
-    <header className="border-b px-6 py-3 flex items-center gap-4 flex-shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="border-b w-3/4 px-6 py-3 flex items-center gap-4 flex-shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <SidebarTrigger className="md:hidden">
         <Menu className="h-4 w-4" />
       </SidebarTrigger>
-      <h1 className="flex-1 font-semibold">Content Management System</h1>
+      <h1 className="flex-1 w-full font-semibold">Content Management System</h1>
       {selectedContent && (
         <div className="flex items-center gap-2">
           {viewMode === 'preview' && (
