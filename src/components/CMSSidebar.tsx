@@ -69,7 +69,7 @@ export function CMSSidebar({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">CMS Editor</h2>
@@ -89,7 +89,7 @@ export function CMSSidebar({
             </Button>
           </div>
         </div>
-        <nav className="space-y-2">
+        <nav className="flex flex-col gap-2 h-full">
           <Button
             variant={activeSection === 'posts' ? 'default' : 'ghost'}
             className="w-full justify-start h-10"
@@ -132,7 +132,7 @@ export function CMSSidebar({
       </div>
 
       {(activeSection === 'posts' || activeSection === 'pages') && !loading && (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 h-full">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -151,7 +151,7 @@ export function CMSSidebar({
             </Button>
           </div>
 
-          <div className="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto">
+          <div className="flex flex-col gap-2 h-full overflow-y-auto">
             {currentSectionContents.map(content => (
               <Card 
                 key={content.id} 
